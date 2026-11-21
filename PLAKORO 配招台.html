@@ -1,0 +1,505 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>PLAKORO 配招台</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Grotesk:wght@600;700&display=swap">
+<style>
+/* Layout: character picker on top, one field mat (HP + 4 slots) in the middle, full move pool below. */
+:root {
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --surface2: #f3f5fa;
+  --line: #d6dce8;
+  --fg: #141a2b;
+  --muted: #566079;
+  --accent: #ffcb05;
+  --on-accent: #171717;
+  --focus: #2f5fd0;
+  --warn: #b3341f;
+  --t-grass: #3f9b49;
+  --t-fire: #e8552f;
+  --t-water: #2f86dc;
+  --t-elec: #f2c200;
+  --t-psy: #a553c9;
+  --t-fight: #a9582a;
+  --t-dark: #4a4566;
+  --t-steel: #7d8da0;
+  --t-sky: #6f8be0;
+  --t-none: #cfcabd;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-num: "Space Grotesk", "Noto Sans TC", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1220; --surface: #171d31; --surface2: #202842; --line: #2d3757;
+    --fg: #e8ebf5; --muted: #98a1bb; --focus: #8fb0ff; --warn: #ff9a85;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1220; --surface: #171d31; --surface2: #202842; --line: #2d3757;
+  --fg: #e8ebf5; --muted: #98a1bb; --focus: #8fb0ff; --warn: #ff9a85;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.wrap { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+h1 { font-size: 1.6rem; font-weight: 900; margin: 0; text-wrap: balance; letter-spacing: .02em; }
+.sub { margin: 2px 0 0; color: var(--muted); }
+h2 { font-size: .8rem; font-weight: 700; letter-spacing: .12em; color: var(--muted); margin: 0 0 8px; text-transform: uppercase; }
+
+/* energy + direction chips */
+[data-t="草"] { --tc: var(--t-grass); --tf: #fff; }
+[data-t="炎"] { --tc: var(--t-fire); --tf: #fff; }
+[data-t="水"] { --tc: var(--t-water); --tf: #fff; }
+[data-t="雷"] { --tc: var(--t-elec); --tf: #1b1b1b; }
+[data-t="超"] { --tc: var(--t-psy); --tf: #fff; }
+[data-t="闘"] { --tc: var(--t-fight); --tf: #fff; }
+[data-t="悪"] { --tc: var(--t-dark); --tf: #fff; }
+[data-t="鋼"] { --tc: var(--t-steel); --tf: #fff; }
+[data-t="空"] { --tc: var(--t-sky); --tf: #fff; }
+[data-t="無"] { --tc: var(--t-none); --tf: #1b1b1b; }
+.en {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 7px;
+  background: var(--tc); color: var(--tf); font-size: .8rem; font-weight: 900; line-height: 1;
+}
+.dir {
+  display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px;
+  background: var(--surface2); border: 1px solid var(--line); font-size: .75rem; font-weight: 700;
+}
+
+/* character picker */
+.chars { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; }
+.ch {
+  display: flex; flex-direction: column; gap: 0; text-align: left; min-width: 0;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px;
+}
+.ch .nm { display: flex; align-items: center; gap: 6px; font-weight: 700; min-width: 0; }
+.ch .nm i { width: 10px; height: 10px; border-radius: 50%; background: var(--tc); flex: none; }
+.ch .jp { font-size: .72rem; color: var(--muted); }
+.ch[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.ch[aria-pressed="true"] .jp { color: var(--on-accent); opacity: .75; }
+
+/* field mat */
+.mat { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.head { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; justify-content: space-between; }
+.who { min-width: 0; }
+.who .big { font-size: 1.5rem; font-weight: 900; line-height: 1.2; }
+.who .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; color: var(--muted); font-size: .85rem; margin-top: 4px; }
+.who .meta b { color: var(--fg); }
+.hp { display: flex; align-items: center; gap: 8px; }
+.hp .lbl { font-size: .75rem; font-weight: 700; color: var(--muted); letter-spacing: .1em; }
+.hp input {
+  width: 4.5ch; min-width: 76px; text-align: center; font-family: var(--font-num); font-weight: 700; font-size: 1.7rem;
+  background: var(--surface2); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; padding: 2px 4px;
+  font-variant-numeric: tabular-nums;
+}
+.btn {
+  background: var(--surface2); border: 1px solid var(--line); border-radius: 9px; padding: 6px 12px; font-weight: 700; font-size: .85rem;
+}
+.btn.sq { width: 44px; height: 44px; padding: 0; font-size: 1rem; font-family: var(--font-num); }
+.btn.prim { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.count { font-family: var(--font-num); font-weight: 700; }
+.msg { color: var(--warn); font-size: .85rem; min-height: 1.3em; }
+.slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 10px; }
+.empty {
+  border: 2px dashed var(--line); border-radius: 12px; min-height: 120px; display: grid; place-items: center;
+  color: var(--muted); font-size: .85rem; text-align: center; padding: 12px;
+}
+.last { color: var(--muted); font-size: .85rem; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.last b { color: var(--fg); }
+
+/* move cards */
+.mv {
+  display: flex; flex-direction: column; gap: 8px; text-align: left; width: 100%; min-width: 0;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+}
+.mat .mv { background: var(--surface2); }
+button.mv:hover { border-color: var(--muted); }
+button.mv[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.mv .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.mv .name { font-weight: 700; font-size: 1.02rem; overflow-wrap: anywhere; }
+.mv .tag { font-size: .7rem; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 0 7px; margin-left: 6px; white-space: nowrap; vertical-align: middle; }
+.mv .dmg { font-family: var(--font-num); font-weight: 700; font-size: 1.5rem; line-height: 1; text-align: right; flex: none; font-variant-numeric: tabular-nums; }
+.mv .dmg small { display: block; font-family: var(--font-body); font-size: .62rem; color: var(--muted); font-weight: 500; letter-spacing: .1em; margin-top: 2px; }
+.mv .cost { display: flex; flex-wrap: wrap; gap: 4px; }
+.mv .efs { display: flex; flex-direction: column; gap: 5px; font-size: .86rem; }
+.ef { overflow-wrap: anywhere; }
+.dg { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; }
+.dirs { display: inline-flex; flex-wrap: wrap; gap: 2px; max-width: 8.2em; }
+.mv .acts { display: flex; gap: 8px; margin-top: 2px; }
+.mv.locked { opacity: .72; }
+.lockbadge { font-size: .78rem; font-weight: 700; color: var(--warn); }
+
+/* pool */
+.filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.fl { background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 4px 12px; font-size: .85rem; font-weight: 500; }
+.fl[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 10px; }
+.legend { color: var(--muted); font-size: .82rem; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.legend span { display: inline-flex; gap: 5px; align-items: center; }
+.foot { color: var(--muted); font-size: .8rem; }
+@media (prefers-reduced-motion: no-preference) { .mv, .ch, .btn { transition: border-color .12s, background-color .12s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>PLAKORO 配招台</h1>
+    <p class="sub">選角色，從招式卡中挑 4 張擺上場。</p>
+  </header>
+
+  <section aria-labelledby="h-char">
+    <h2 id="h-char">角色</h2>
+    <div class="chars" id="chars"></div>
+  </section>
+
+  <section class="mat" id="mat" aria-label="場上"></section>
+
+  <section aria-labelledby="h-pool">
+    <h2 id="h-pool">可選招式</h2>
+    <div class="filters" id="filters"></div>
+    <div class="pool" id="pool"></div>
+  </section>
+
+  <section class="legend" aria-label="骰子方向對照">
+    <span><b>角色骰方向</b></span>
+    <span><i class="dir">上</i>立起</span>
+    <span><i class="dir">下</i>倒立</span>
+    <span><i class="dir">前</i>仰躺</span>
+    <span><i class="dir">後</i>俯臥</span>
+    <span><i class="dir">左</i><i class="dir">右</i>側躺</span>
+  </section>
+
+  <p class="foot">非官方整理，招式名稱用日文原名。資料來源：競技玩具研究所、空中研究所、Bandai 官方網站，更新至 2026/09/27。</p>
+</div>
+
+<script>
+(function () {
+  var FX = {
+    '+': function (n) { return '追加 ' + n + ' 傷害'; },
+    S: function (n) { return '自己也受 ' + n + ' 傷害'; },
+    H: function (n) { return '回復 ' + n + ' HP'; },
+    h: function (n) { return '再回復 ' + n + ' HP'; },
+    O: function (n) { return '下回合對手少擲 ' + n + ' 顆能量骰'; },
+    M: function (n) { return '下回合自己多擲 ' + n + ' 顆能量骰'; },
+    m: function (n) { return '下回合自己少擲 ' + n + ' 顆能量骰'; },
+    R: function (n) { return '下回合受到的傷害 −' + n; },
+    r: function (n) { return '受到的傷害再 −' + n; }
+  };
+  function fx(t) {
+    if (t.charAt(0) === '~') return t.slice(1);
+    if (t === 'seal') return '選對手一張招式，下回合對手不能使用';
+    if (t === 'nodice') return '下回合對手不能擲角色骰';
+    var m = /^([+SHhOMmRr])(\d+)$/.exec(t);
+    return m ? FX[m[1]](m[2]) : t;
+  }
+  // name|type|cost|damage|base effects|direction effects|tag
+  function P(txt) {
+    return txt.trim().split('\n').map(function (l) {
+      var f = l.split('|');
+      return {
+        n: f[0], t: f[1], c: f[2], d: f[3] === '-' ? null : +f[3],
+        b: f[4] ? f[4].split('&').map(fx) : [],
+        g: f[5] ? f[5].split('/').map(function (g) {
+          var p = g.split(':');
+          return { dirs: p[0].split(''), e: p[1].split('&').map(fx) };
+        }) : [],
+        s: f[6] || ''
+      };
+    });
+  }
+
+  var CHARS = [
+    { k: 'bulba', tw: '妙蛙種子', jp: 'フシギダネ', t: '草', hp: 120, w: '炎', src: '啟程套組 01', m: P(
+'つるのむち|草|草|10||上前後:+20\n' +
+'はっぱカッター|草|草草|20||上左右:+20\n' +
+'やどりぎのタネ|草|草草|10||上前左右:O1&M1\n' +
+'くさむすび|草|草草草|30||上前後:seal\n' +
+'とつげき|草|草草草|30||上前:+40/下後:S30\n' +
+'ギガドレイン|草|草草草草|40||上左右:H40\n' +
+'アシッドボム|悪|悪無無|10||上左右:+20\n' +
+'アロマストーム|草|草草草草|30||上:H50|P') },
+    { k: 'charm', tw: '小火龍', jp: 'ヒトカゲ', t: '炎', hp: 120, w: '水', src: '啟程套組 02', m: P(
+'ひのこ|炎|炎炎|20||上前:+30\n' +
+'ヒートアップ|炎|炎炎|10||上前:M2\n' +
+'かえんほうしゃ|炎|炎炎炎|40||上前:+20/下後左右:m1\n' +
+'ほのおのキバ|炎|炎炎炎炎|30||上前:+30\n' +
+'フレアストーム|炎|無無無無無|20||上左右:~每個擲出的炎能量，追加 10 傷害\n' +
+'かみなりパンチ|雷|雷無無|10||上前左右:+20\n' +
+'メタルクロー|鋼|鋼無無|20||上:+40\n' +
+'フレイムアップ|炎|炎炎炎|20||上:M2/下:m2|P') },
+    { k: 'squirt', tw: '傑尼龜', jp: 'ゼニガメ', t: '水', hp: 120, w: '雷', src: '啟程套組 03', m: P(
+'みずでっぽう|水|水|10||上後:+20\n' +
+'からにこもる|水|水|-|R20|後:H30\n' +
+'みずのはどう|水|水水|20||上左右:+20\n' +
+'シェルアタック|水|水水水|30||上前後:R20\n' +
+'バブルこうせん|水|水水水|30||上前後:O1\n' +
+'ハイドロアンガー|水|水水水水|40||上前後:~自身剩餘 HP 在 40 以下時，追加 60 傷害\n' +
+'マッドショット|闘|闘無無無|30||上左右:+30\n' +
+'カチカチこうら|水|水水水|20||後:R50|P') },
+    { k: 'pika', tw: '皮卡丘', jp: 'ピカチュウ', t: '雷', hp: 120, w: '闘', src: '啟程套組 04', m: P(
+'かじる|雷|雷|10||上前:+30\n' +
+'でんきショック|雷|雷雷|10||上下左右:+20\n' +
+'エレキラッシュ|雷|雷雷|20|~此招式不計算弱點|上前:~再使用一次エレキラッシュ（可連續直到失敗）\n' +
+'10まんボルト|雷|雷雷雷|30||上左右:+30/下左右:m2\n' +
+'かみなり|雷|雷雷雷|20||上:+60\n' +
+'ボルテッカー|雷|雷雷雷雷|40|S30|上前後:+40\n' +
+'アイアンテール|鋼|鋼|20||上前後:R10\n' +
+'クリティカルボルト|雷|雷雷雷雷|30||上:+60|P') },
+    { k: 'eevee', tw: '伊布', jp: 'イーブイ', t: '無', hp: 120, w: '闘', src: '啟程套組 05', m: P(
+'しっぽではたく|無|空|10||上左右:+10\n' +
+'たいあたり|無|空空|10||上前左右:+20\n' +
+'とっしん|無|空空|30||上前:+20/下後:S20\n' +
+'はねまわる|無|空空空|-||上:~造成 70 傷害/前後:~造成 40 傷害/下左右:~造成 20 傷害\n' +
+'ぜんりょくダッシュ|無|無無無無無|40||上前後:+40\n' +
+'あまえる|超|超|20||上前左右:O2\n' +
+'かみつく|悪|悪無無|10||上左右:+20\n' +
+'ねころぶ|無|空空|-|H10|前後:h20|P') },
+    { k: 'mew', tw: '夢幻', jp: 'ミュウ', t: '超', hp: 120, w: '悪', src: '啟程套組 06', m: P(
+'ねんりき|超|超|10||上左右:+20\n' +
+'サイケこうせん|超|超超|20||上下:+30\n' +
+'バリアー|超|超超|-|R20|上前:r30\n' +
+'メモリースキップ|超|超超|20||上左右:seal\n' +
+'サイコショット|超|超超超|30||上下前後:+20\n' +
+'サイコキネシス|超|超超超|20||上前後:~對手擲 3 顆能量骰，出現最多的同屬性數量 ×10，追加等量傷害\n' +
+'リフレクション|超|超超超超|-|~造成對手最後選的招式所標示的傷害（無視該招式的角色骰效果）|上左右:~此招式造成的傷害變 2 倍') },
+    { k: 'gengar', tw: '耿鬼', jp: 'ゲンガー', t: '悪', hp: null, w: null, src: '啟程套組 07', m: P(
+'ガスでつつむ|悪|悪|10||上左右:+10\n' +
+'ホロウショット|悪|悪悪|20||上前後:+20\n' +
+'まっさかさま|悪|悪悪|20||上左右:~下回合對手的角色骰朝向固定為「下」\n' +
+'かげしばり|悪|悪悪悪|30||上前左右:nodice\n' +
+'ヘドロばくだん|悪|悪悪悪|30||上後左右:+20\n' +
+'ファントムトリック|悪|悪悪悪悪|10||上下前後:~對手擲 3 次角色骰，每出現一次「下」或「後」，追加 40 傷害\n' +
+'サイコウェーブ|超|超無無無|30||上:+40') },
+    { k: 'meta', tw: '巨金怪', jp: 'メタグロス', t: '鋼', hp: null, w: null, src: '啟程套組 08', m: P(
+'ビーム|鋼|鋼|10||上前:+20\n' +
+'しそくえんざん|鋼|鋼鋼|20||上前左右:~下回合自己的角色骰朝向，固定為此招式擲出的朝向\n' +
+'ワイドプレス|鋼|鋼鋼|20||左右:+30\n' +
+'ストレートスタンプ|鋼|鋼鋼鋼|30||上前後:+20\n' +
+'コメットパンチ|鋼|鋼鋼鋼|20||上前:+40\n' +
+'ヘビーボンバー|鋼|鋼鋼鋼鋼|40||上左右:+40/下前後:m2\n' +
+'だいばくはつ|無|無無無無無|100||上:~此招式對自己的傷害歸零') },
+    { k: 'lucario', tw: '路卡利歐', jp: 'ルカリオ', t: '闘', hp: null, w: null, src: '啟程套組 09', m: P(
+'キック|闘|闘|10||上前:+10\n' +
+'はっけい|闘|闘闘|20||上前:O1\n' +
+'はどうナックル|闘|闘闘|20||上前後:~自身剩餘 HP 在 80 以下時，追加 30 傷害\n' +
+'まわしげり|闘|闘闘闘|20||上左右:+30\n' +
+'オーラづき|闘|闘闘闘|30||上前左右:~自身剩餘 HP 在 80 以下時，下回合受到的傷害 −20\n' +
+'はどうだん|闘|闘闘闘闘|40||上前後:~自身剩餘 HP 在 40 以下時，追加 50 傷害\n' +
+'メタルクロー|鋼|鋼無無無|30||上:+40') },
+    { k: 'kai', tw: '凱羅斯', jp: 'カイロス', t: '草', hp: 120, w: '空', src: '探險盒組 01', m: P(
+'しゅうちゅう|草|草|-||上左右:M2|A\n' +
+'たえる|草|草草|-|R20|上前後:r20|A\n' +
+'つのでたたく|草|草草草|20||上左右:+30|A\n' +
+'はさみギロチン|無|草草草草草|-||上:~直接造成 150 傷害|A\n' +
+'かわらわり|闘|闘|20||上前:+20|A\n' +
+'チャージばさみ|草|草草|20||上前:M1|B\n' +
+'ぎゃくじょうスイング|草|草草草|10||上左右:~下個自己回合，若自己招式的能量骰失敗，追加 40 傷害|B\n' +
+'とつげき|草|草草草|30||上前:+20/下後:S20|B\n' +
+'ひっさつばさみ|草|草草草草|20||上:+80|B\n' +
+'じごくぐるま|闘|闘無無無|30|S20|上下前後:+30|B') },
+    { k: 'fire', tw: '火焰鳥', jp: 'ファイヤー', t: '炎', hp: 120, w: '水', src: '探險盒組 01', m: P(
+'ほのおのつばさ|炎|炎炎|30||上前:+30/左右:S20|A\n' +
+'ねっぷう|炎|炎炎炎|30||上左右:+20|A\n' +
+'かえんほうしゃ|炎|炎炎炎炎|40||上前:+40/下後左右:m2|A\n' +
+'フレアドライブ|炎|炎炎炎炎炎|50||上前後:+40/左右下:S40|A\n' +
+'ぼうふう|空|空無無無|20||上:+60|A\n' +
+'ほのおのうず|炎|炎炎|20||上前:+40/下後左右:m2|B\n' +
+'ヒートブレス|炎|炎炎炎|40||上前:+40/下後:S30|B\n' +
+'もえつきる|炎|炎炎炎炎|80||前後下:~此招式失敗|B\n' +
+'ウイングラッシュ|空|空|20||上前左右:+10|B\n' +
+'そらをとぶ|空|空無無|30||上左右:~下回合此寶可夢不受招式傷害/前後下:~此招式失敗|B') },
+    { k: 'ice', tw: '急凍鳥', jp: 'フリーザー', t: '水', hp: 120, w: '鋼', src: '探險盒組 01', m: P(
+'アイスウイング|水|水水|10||上前左右:O1|A\n' +
+'いてつくやいば|水|水水水|30||上左右:nodice|A\n' +
+'ブリザードストーム|水|水水水水|30||上前左右:+30|A\n' +
+'エアカッター|空|空無無無無|40||上前:+30|A\n' +
+'はねやすめ|空|空空|-|H20|上左右:h20|A\n' +
+'フリーズダイブ|水|水|10||上前:+20|B\n' +
+'アイスショット|水|水水|20||上左右:+20|B\n' +
+'コールドブレス|水|水水水|20||上左右:O2|B\n' +
+'ぜったいれいど|水|水水水水|40||上前:O2&nodice|B\n' +
+'そらをとぶ|空|空無無|30||上左右:~下回合此寶可夢不受招式傷害/前後下:~此招式失敗|B') },
+    { k: 'zap', tw: '閃電鳥', jp: 'サンダー', t: '雷', hp: 120, w: '闘', src: '探險盒組 01', m: P(
+'でんじフラッシュ|雷|雷雷|20||上前:+30|A\n' +
+'でんきショック|雷|雷|10||上前左右:+10|A\n' +
+'ボルトラッシュ|雷|雷雷雷雷|10|~此招式共擲 3 次角色骰|上左右:~每次角色骰成功，追加 30 傷害|A\n' +
+'つばめがえし|空|空|20||上前:+20|A\n' +
+'バリバリウイング|空|空無無無無|40||上左右:+40|A\n' +
+'ダブルサンダー|雷|雷|-|~此招式共擲 2 次角色骰|上前後:~每次角色骰成功，追加 20 傷害|B\n' +
+'エレキアロー|雷|雷雷|20||上:+40|B\n' +
+'ほうでん|雷|雷雷雷|30||上前後:+20|B\n' +
+'サンダーチェイン|雷|雷雷雷雷|30||上前後:+30&~再擲一次角色骰（可連續直到失敗）|B\n' +
+'そらをとぶ|空|空無無|30||上左右:~下回合此寶可夢不受招式傷害/前後下:~此招式失敗|B') },
+    { k: 'onix', tw: '大岩蛇', jp: 'イワーク', t: '闘', hp: 120, w: '草', src: '探險盒組 01', m: P(
+'がんせきタックル|闘|闘闘|10|R10|上左右:r20|A\n' +
+'いわおとし|闘|闘闘闘|20||上前:+30|A\n' +
+'ロックウォール|闘|闘闘闘|30||上前左右:R30|A\n' +
+'ハードインパクト|闘|闘闘闘闘|30||上左右:+30/下:m1|A\n' +
+'ジャイロボール|鋼|鋼無無|20||上前左右:~再擲一次角色骰，若出現「下」或「後」，追加 60 傷害|A\n' +
+'ぶつかる|闘|闘|10||上前後:+10|B\n' +
+'いわなだれ|闘|闘闘|20||上左右:+20|B\n' +
+'ワイルドタックル|闘|闘闘闘|30||上前:+20/下後左右:S20|B\n' +
+'がんせきバリア|闘|闘闘闘闘|40||上前:R50|B\n' +
+'アイアンテール|鋼|鋼無無|20||上左右:R10|B') },
+    { k: 'muk', tw: '臭泥', jp: 'ベトベター', t: '悪', hp: 120, w: '闘', src: '探險盒組 01', m: P(
+'どくガス|悪|悪|10||上左右:O1|AB\n' +
+'ベトベトなげ|悪|悪悪|20||上左右:+20|A\n' +
+'どくどくヒール|悪|悪悪悪|30||上前左右:~若上個自己回合「どくガス」的能量骰成功，回復 30 HP|A\n' +
+'ヘドロでかこむ|悪|悪悪悪|30||上前後:seal|A\n' +
+'ベノムパンチ|悪|悪悪悪悪|40||上前:+30|A\n' +
+'ベノムスリップ|悪|悪悪|20||上前左右:~對手也擲角色骰，若出現「後」「下」「左」「右」，追加 20 傷害|B\n' +
+'どくどくボンバー|悪|悪悪悪|30||上前後:~若上個自己回合「どくガス」的能量骰成功，追加 30 傷害|B\n' +
+'ヘドロタックル|悪|悪悪悪|20||上左右:+40/下前後:S20|B\n' +
+'いやがらせベノム|悪|悪悪悪悪|20||上左右:~若上個對手回合，對手招式的能量骰失敗，追加 50 傷害|B') }
+  ];
+  var CH = {};
+  CHARS.forEach(function (c) { CH[c.k] = c; });
+
+  var KEY = 'plakoro-helper-v1';
+  var S = { ch: 'pika', picks: {}, hp: {}, last: {}, flt: 'all', promo: true };
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved && typeof saved === 'object') {
+      if (saved.ch && CH[saved.ch]) S.ch = saved.ch;
+      ['picks', 'hp', 'last'].forEach(function (k) { if (saved[k] && typeof saved[k] === 'object') S[k] = saved[k]; });
+      if (saved.flt === 'A' || saved.flt === 'B') S.flt = saved.flt;
+      if (typeof saved.promo === 'boolean') S.promo = saved.promo;
+    }
+  } catch (e) {}
+  CHARS.forEach(function (c) {
+    var p = S.picks[c.k];
+    if (!Array.isArray(p)) { S.picks[c.k] = []; return; }
+    var seen = {};
+    S.picks[c.k] = p.filter(function (i) {
+      if (typeof i !== 'number' || i < 0 || i >= c.m.length || seen[i]) return false;
+      seen[i] = 1; return true;
+    }).slice(0, 4);
+  });
+  var msg = '', msgTimer = null;
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function say(t) {
+    msg = t; render();
+    clearTimeout(msgTimer);
+    msgTimer = setTimeout(function () { msg = ''; render(); }, 2200);
+  }
+  function hpOf(c) { var v = S.hp[c.k]; return typeof v === 'number' ? v : (c.hp == null ? 120 : c.hp); }
+
+  var TAG = { A: 'A 組', B: 'B 組', AB: 'A／B 組', P: '促銷卡' };
+  function moveHTML(c, m, i, mode) {
+    var picks = S.picks[c.k];
+    var locked = mode === 'field' && S.last[c.k] === i;
+    var cost = m.c.split('').map(function (x) { return '<span class="en" data-t="' + x + '">' + x + '</span>'; }).join('');
+    var efs = m.b.map(function (e) { return '<span class="ef">' + e + '</span>'; }).join('');
+    efs += m.g.map(function (g) {
+      return '<span class="dg"><span class="dirs">' + g.dirs.map(function (d) { return '<i class="dir">' + d + '</i>'; }).join('') +
+        '</span><span class="ef">' + g.e.join('；') + '</span></span>';
+    }).join('');
+    var inner =
+      '<span class="top"><span class="name">' + m.n + (m.s ? '<span class="tag">' + TAG[m.s] + '</span>' : '') + '</span>' +
+      '<span class="dmg">' + (m.d == null ? '—' : m.d) + '<small>傷害</small></span></span>' +
+      '<span class="cost" aria-label="能量需求">' + cost + '</span>' +
+      '<span class="efs">' + efs + '</span>';
+    if (mode === 'pool') {
+      var on = picks.indexOf(i) >= 0;
+      return '<button type="button" class="mv" data-act="pick" data-i="' + i + '" aria-pressed="' + on + '">' + inner +
+        '<span class="lockbadge" style="color:var(--muted)">' + (on ? '已上場，點一下移除' : '點一下放上場') + '</span></button>';
+    }
+    return '<article class="mv' + (locked ? ' locked' : '') + '">' + inner +
+      (locked ? '<span class="lockbadge">上回合用過，本回合不能選</span>' : '') +
+      '<span class="acts"><button type="button" class="btn prim" data-act="use" data-i="' + i + '"' + (locked ? ' disabled' : '') + '>使用這招</button>' +
+      '<button type="button" class="btn" data-act="pick" data-i="' + i + '">移除</button></span></article>';
+  }
+
+  function visible(m) {
+    if (m.s === 'P') return S.promo;
+    if (S.flt === 'all' || !m.s) return true;
+    return m.s.indexOf(S.flt) >= 0;
+  }
+
+  function render() {
+    var c = CH[S.ch], picks = S.picks[c.k];
+    document.getElementById('chars').innerHTML = CHARS.map(function (x) {
+      return '<button type="button" class="ch" data-act="char" data-k="' + x.k + '" data-t="' + x.t + '" aria-pressed="' + (x.k === S.ch) + '">' +
+        '<span class="nm"><i></i>' + x.tw + '</span><span class="jp">' + x.jp + '</span></button>';
+    }).join('');
+
+    var weak = c.w ? '<span>弱點 <span class="en" data-t="' + c.w + '">' + c.w + '</span>，受到該屬性招式多 20 傷害</span>' : '<span>弱點資料尚未確認</span>';
+    var slots = '';
+    for (var s = 0; s < 4; s++) {
+      slots += s < picks.length ? moveHTML(c, c.m[picks[s]], picks[s], 'field')
+        : '<div class="empty">空位<br>從下方挑一張招式</div>';
+    }
+    var last = S.last[c.k];
+    var lastHTML = (typeof last === 'number' && picks.indexOf(last) >= 0)
+      ? '上回合使用：<b>' + c.m[last].n + '</b><button type="button" class="btn" data-act="clearlast">清除</button>'
+      : '還沒有使用紀錄。按「使用這招」後，下回合不能再選同一招。';
+    document.getElementById('mat').innerHTML =
+      '<div class="head"><div class="who"><div class="big">' + c.tw + ' <span style="font-size:.9rem;font-weight:500;color:var(--muted)">' + c.jp + '</span></div>' +
+      '<div class="meta"><span>屬性 <span class="en" data-t="' + c.t + '">' + c.t + '</span></span>' + weak + '<span>' + c.src + '</span></div></div>' +
+      '<div class="hp"><span class="lbl">HP</span><button type="button" class="btn sq" data-act="hp" data-d="-10" aria-label="HP 減 10">−10</button>' +
+      '<input id="hpin" type="number" inputmode="numeric" value="' + hpOf(c) + '" aria-label="目前 HP">' +
+      '<button type="button" class="btn sq" data-act="hp" data-d="10" aria-label="HP 加 10">+10</button>' +
+      '<button type="button" class="btn" data-act="hpreset">回到 ' + (c.hp == null ? 120 : c.hp) + '</button></div></div>' +
+      '<div class="bar"><span>場上招式 <span class="count">' + picks.length + ' / 4</span></span>' +
+      '<button type="button" class="btn" data-act="clearpicks"' + (picks.length ? '' : ' disabled') + '>全部撤下</button></div>' +
+      '<div class="msg" role="status">' + msg + '</div>' +
+      '<div class="slots">' + slots + '</div><div class="last">' + lastHTML + '</div>';
+
+    var hasSets = c.m.some(function (m) { return m.s === 'A' || m.s === 'B' || m.s === 'AB'; });
+    var hasPromo = c.m.some(function (m) { return m.s === 'P'; });
+    var f = '';
+    if (hasSets) {
+      [['all', '全部'], ['A', 'A 組'], ['B', 'B 組']].forEach(function (o) {
+        f += '<button type="button" class="fl" data-act="flt" data-v="' + o[0] + '" aria-pressed="' + (S.flt === o[0]) + '">' + o[1] + '</button>';
+      });
+    }
+    if (hasPromo) f += '<button type="button" class="fl" data-act="promo" aria-pressed="' + S.promo + '">含促銷卡</button>';
+    document.getElementById('filters').innerHTML = f;
+    document.getElementById('filters').hidden = !f;
+
+    var out = '';
+    c.m.forEach(function (m, i) { if (visible(m)) out += moveHTML(c, m, i, 'pool'); });
+    document.getElementById('pool').innerHTML = out;
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]');
+    if (!b) return;
+    var c = CH[S.ch], picks = S.picks[c.k], act = b.getAttribute('data-act'), i = +b.getAttribute('data-i');
+    if (act === 'char') { S.ch = b.getAttribute('data-k'); msg = ''; }
+    else if (act === 'pick') {
+      var at = picks.indexOf(i);
+      if (at >= 0) { picks.splice(at, 1); if (S.last[c.k] === i) delete S.last[c.k]; }
+      else if (picks.length >= 4) { save(); say('場上已有 4 張，先撤下一張再換。'); return; }
+      else picks.push(i);
+    }
+    else if (act === 'use') S.last[c.k] = i;
+    else if (act === 'clearlast') delete S.last[c.k];
+    else if (act === 'clearpicks') { S.picks[c.k] = []; delete S.last[c.k]; }
+    else if (act === 'hp') S.hp[c.k] = Math.max(0, hpOf(c) + (+b.getAttribute('data-d')));
+    else if (act === 'hpreset') delete S.hp[c.k];
+    else if (act === 'flt') S.flt = b.getAttribute('data-v');
+    else if (act === 'promo') S.promo = !S.promo;
+    save(); render();
+  });
+  document.addEventListener('change', function (e) {
+    if (e.target.id !== 'hpin') return;
+    var v = parseInt(e.target.value, 10);
+    S.hp[S.ch] = isNaN(v) ? hpOf(CH[S.ch]) : Math.max(0, v);
+    save(); render();
+  });
+  render();
+})();
+</script>
+
+</body></html>
